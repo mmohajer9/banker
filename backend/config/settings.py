@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     # ? local apps
     "accounts.apps.AccountsConfig",
     # ? 3rd party apps
+    "oauth2_provider",
     "rest_framework",
     "rest_framework.authtoken",
     "import_export",
@@ -58,9 +59,23 @@ INSTALLED_APPS = [
     "admin_honeypot",
 ]
 
+
+OAUTH2_PROVIDER = {
+    # this is the list of available scopes
+    "SCOPES": {
+        "read": "Read scope",
+        "write": "Write scope",
+        "groups": "Access to your groups",
+    },
+    # age in OAUTH2_BACKEND_CLASS ro nazari bayad bejaye "application/json bayad" in -->  "application/x-www-form-urlencoded" ro bzari
+    "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.JSONOAuthLibCore",
+    # 'OAUTH2_VALIDATOR_CLASS': 'account.oauth2_custom_validator.MyOAuth2Validator',
+    "ACCESS_TOKEN_EXPIRE_SECONDS": (60 * 60 * 24) * 30 * 12,  # 1 - year
+}
+
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
+        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
         # "rest_framework.authentication.TokenAuthentication",
         # "rest_framework.authentication.SessionAuthentication",
     ],
@@ -158,12 +173,12 @@ CACHES = {
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-        "OPTIONS": {
-            "min_length": 8,
-        },
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 8,
+        },
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
