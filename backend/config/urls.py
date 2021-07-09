@@ -18,18 +18,23 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.conf.urls import url
+
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
 
+from dj_rest_auth.views import (
+    PasswordResetConfirmView,
+)
+
 
 schema_view = get_schema_view(
     openapi.Info(
-        title="Merchant API",
+        title="Banker API",
         default_version="v1",
-        description="Merchant is a comprehensive E-Commerce Platform",
+        description="Banker is a banking system with security mechanisms implemented",
         terms_of_service="https://www.google.com/policies/terms/",
-        contact=openapi.Contact(email="info@merchant.com"),
+        contact=openapi.Contact(email="info@banker.com"),
         license=openapi.License(name="MIT License"),
     ),
     public=True,
@@ -38,9 +43,22 @@ schema_view = get_schema_view(
 
 
 urlpatterns = [
-     # ? general purpose
+    # ? general purpose
     path("secret/", admin.site.urls),
     path("admin/", include("admin_honeypot.urls", namespace="admin_honeypot")),
+    # ------------------------------------------------------------------------------
+    # ? local apps
+    path("api/v1/accounts/", include("accounts.urls", namespace="v1-accounts")),
+    # ------------------------------------------------------------------------------
+    # ? authentication
+    # this url is used to generate email content
+    path("api/rest-auth/", include("dj_rest_auth.urls")),
+    path("api/rest-auth/registration/", include("dj_rest_auth.registration.urls")),
+    path(
+        "api/rest-auth/password/reset/confirm/<uidb64>/<token>/",
+        PasswordResetConfirmView.as_view(),
+        name="password_reset_confirm",
+    ),
     # ------------------------------------------------------------------------------
     # ? api doc
     url(
@@ -62,12 +80,11 @@ urlpatterns = [
 ]
 
 
-
 if settings.DEBUG:
     import debug_toolbar
 
-    urlpatterns += (path("__debug__/", include(debug_toolbar.urls)),)
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += (path("__debug__/", include(debug_toolbar.urls)),)
 
 # ? handler404 = a view for handling 404 not found page -> def view(request , Exception = None):
 # ? handler500 = same as 404 ...

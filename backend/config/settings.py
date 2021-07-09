@@ -12,12 +12,14 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATE_DIR = BASE_DIR / "templates"
 STATIC_DIR = BASE_DIR / "static"
 MEDIA_DIR = BASE_DIR / "media"
+
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
@@ -40,10 +42,10 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "django.contrib.sites",
     # ? local apps
     "accounts.apps.AccountsConfig",
     # ? 3rd party apps
-    "oauth2_provider",
     "rest_framework",
     "rest_framework.authtoken",
     "import_export",
@@ -53,29 +55,22 @@ INSTALLED_APPS = [
     "drf_yasg",
     "imagekit",
     "request",
-    "debug_toolbar",
     # ? security
     "corsheaders",
     "admin_honeypot",
+    # ? authentication
+    "allauth",
+    "allauth.account",
+    "allauth.socialaccount",
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+    "rest_framework_simplejwt.token_blacklist",
+    "debug_toolbar",
 ]
-
-
-OAUTH2_PROVIDER = {
-    # this is the list of available scopes
-    "SCOPES": {
-        "read": "Read scope",
-        "write": "Write scope",
-        "groups": "Access to your groups",
-    },
-    # age in OAUTH2_BACKEND_CLASS ro nazari bayad bejaye "application/json bayad" in -->  "application/x-www-form-urlencoded" ro bzari
-    "OAUTH2_BACKEND_CLASS": "oauth2_provider.oauth2_backends.JSONOAuthLibCore",
-    # 'OAUTH2_VALIDATOR_CLASS': 'account.oauth2_custom_validator.MyOAuth2Validator',
-    "ACCESS_TOKEN_EXPIRE_SECONDS": (60 * 60 * 24) * 30 * 12,  # 1 - year
-}
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "oauth2_provider.contrib.rest_framework.OAuth2Authentication",
+        "dj_rest_auth.jwt_auth.JWTCookieAuthentication",
         # "rest_framework.authentication.TokenAuthentication",
         # "rest_framework.authentication.SessionAuthentication",
     ],
@@ -106,7 +101,6 @@ REST_FRAMEWORK = {
         "rest_framework.filters.OrderingFilter",
     ],
 }
-
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -167,6 +161,14 @@ CACHES = {
     },
 }
 
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
+    "django.contrib.auth.hashers.BCryptPasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+]
+
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
 
@@ -186,14 +188,6 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
-]
-
-PASSWORD_HASHERS = [
-    "django.contrib.auth.hashers.Argon2PasswordHasher",
-    "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
-    "django.contrib.auth.hashers.BCryptPasswordHasher",
-    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
-    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
 ]
 
 
@@ -221,22 +215,18 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_DIRS = [
     STATIC_DIR,
 ]
-
 # MEDIA
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = MEDIA_DIR
-
-# Simple History
-SIMPLE_HISTORY_REVERT_DISABLED = True
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-
-AUTH_USER_MODEL = "accounts.User"
+# Simple History
+SIMPLE_HISTORY_REVERT_DISABLED = True
 
 
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
@@ -276,6 +266,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 #     'PUT',
 # ]
 
+
 # Django Debug Toolbar
 DEBUG_TOOLBAR_PANELS = [
     "debug_toolbar.panels.history.HistoryPanel",
@@ -299,3 +290,71 @@ INTERNAL_IPS = [
     "127.0.0.1",
     # ...
 ]
+
+
+# ---------------------------------------------------------------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------------------------------------------------------------------
+
+
+# ? Django Authentication Settings
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    "django.contrib.auth.backends.ModelBackend",
+    # `allauth` specific authentication methods, such as login by e-mail
+    "allauth.account.auth_backends.AuthenticationBackend",
+]
+
+AUTH_USER_MODEL = "accounts.User"
+
+# LOGIN_URL = None
+# LOGIN_REDIRECT_URL = None
+# LOGOUT_REDIRECT_URL = None
+
+
+# ? Related to Sites Framework (needed by dj-rest-auth registration)
+
+SITE_ID = 1
+
+# ? allauth , dj-rest-auth , simpleJWT settings
+
+ACCOUNT_AUTHENTICATION_METHOD = "username_email"
+
+REST_USE_JWT = True
+
+JWT_AUTH_RETURN_EXPIRATION = True
+
+# JWT_AUTH_COOKIE = "banker-access"
+
+# JWT_AUTH_REFRESH_COOKIE = 'banker-refresh'
+
+ACCOUNT_LOGOUT_ON_GET = False
+
+OLD_PASSWORD_FIELD_ENABLED = True
+
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=30),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=60),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    "UPDATE_LAST_LOGIN": True,
+    # 'ALGORITHM': 'HS256',
+    # 'SIGNING_KEY': SECRET_KEY,
+    # 'VERIFYING_KEY': None,
+    # 'AUDIENCE': None,
+    # 'ISSUER': None,
+    # 'AUTH_HEADER_TYPES': ('Bearer',),
+    # 'USER_ID_FIELD': 'id',
+    # 'USER_ID_CLAIM': 'user_id',
+    # 'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    # 'TOKEN_TYPE_CLAIM': 'token_type',
+    # 'JTI_CLAIM': 'jti',
+    # 'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    # 'SLIDING_TOKEN_LIFETIME': timedelta(minutes=5),
+    # 'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
+}
+
+# REST_AUTH_SERIALIZERS = {
+#     "USER_DETAILS_SERIALIZER": "accounts.serializers.UserDetailsSerializer",
+#     "PASSWORD_RESET_CONFIRM_SERIALIZER": "accounts.serializers.MyPasswordResetConfirmSerializer",
+# }
