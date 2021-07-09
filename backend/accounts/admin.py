@@ -35,9 +35,13 @@ class JoinedRequestAdmin(SimpleHistoryAdmin):
     list_display = (
         "user",
         "requested_account",
+        "requested_account_conf_label",
+        "requested_account_integrity_label",
         "status",
         "conf_label",
         "integrity_label",
+        "has_read_access",
+        "has_write_access",
         "created_at",
         "updated_at",
     )

@@ -1,21 +1,26 @@
 from rest_framework import viewsets
 from rest_framework import permissions
+from django.db.models import Q
 
 # from rest_framework.response import Response
 # from django.shortcuts import get_object_or_404
 
 from .generics import EnhancedModelViewSet
 from .serializers import AccountSerializer
-from .permissions import Forbidden
-from .models import Account
+from .permissions import Forbidden, HasReadAccess
+from .models import Account, JoinedRequest
 
 
 # Create your views here.
 
 
 class AccountViewSet(EnhancedModelViewSet):
-
-    queryset = Account.objects.all()
+    def get_queryset(self):
+        user = self.request.user
+        return Account.objects.filter(
+            Q(user=user)
+            | Q(joined_requests__user=user, joined_requests__status="accepted")
+        )
 
     # default serializer and permission classes
     serializer_class = AccountSerializer
@@ -30,22 +35,21 @@ class AccountViewSet(EnhancedModelViewSet):
     # action_serializers = {
     #     # "list": Serializer1,
     #     # "create": Serializer2,
-    #     "retrieve": SellerDetailSerializer,
+    #     # "retrieve": SellerDetailSerializer,
     #     # "update": Serializer4,
     #     # "partial_update": Serializer5,
     #     # "destroy": Serializer6,
     # }
 
     # # override per action
-    # action_permission_classes = {
-    #     "list": [permissions.AllowAny],
-    #     "create": [permissions.IsAuthenticated, IsNotSeller],
-    #     "retrieve": [permissions.AllowAny],
-    #     "update": [permissions.IsAuthenticated, IsOwner],
-    #     "partial_update": [permissions.IsAuthenticated, IsOwner],
-    #     "destroy": [permissions.IsAuthenticated, IsOwner],
-    # }
+    action_permission_classes = {
+        "list": [permissions.IsAuthenticated],
+        "create": [permissions.IsAuthenticated],
+        "retrieve": [permissions.IsAuthenticated, HasReadAccess],
+        "update": [Forbidden],
+        "partial_update": [Forbidden],
+        "destroy": [Forbidden],
+    }
 
-    # def perform_create(self, serializer):
-    #     serializer.save(user=self.request.user)
-
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
