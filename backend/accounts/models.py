@@ -79,7 +79,7 @@ class Account(models.Model):
     history = HistoricalRecords()
 
     def __str__(self):
-        return self.user
+        return str(self.user)
 
     class Meta:
         # db_table = ''
@@ -157,8 +157,8 @@ class JoinedRequest(models.Model):
     class Meta:
         # db_table = ''
         # managed = True
-        verbose_name = "JoinedRequest"
-        verbose_name_plural = "JoinedRequests"
+        verbose_name = "Joined Request"
+        verbose_name_plural = "Joined Requests"
 
 
 class Transaction(models.Model):
