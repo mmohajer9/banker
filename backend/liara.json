@@ -1,0 +1,13 @@
+{
+  "platform": "django",
+  "app": "banker",
+  "disks": [
+    {
+      "name": "main-media-disk",
+      "mountTo": "media"
+    }
+  ],
+  "django": {
+    "pythonVersion": "3.9"
+  }
+}
