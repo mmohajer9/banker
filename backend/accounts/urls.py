@@ -3,4 +3,6 @@ from rest_framework import routers
 
 app_name = "accounts"
 
-urlpatterns = []
+router = routers.SimpleRouter()
+
+urlpatterns = [path("", include(router.urls))]

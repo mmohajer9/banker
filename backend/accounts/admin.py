@@ -7,6 +7,11 @@ from .models import Account, User
 
 # Register your models here.
 
+admin.site.site_header = _("Banker")
+
+
+admin.site.register(User, UserAdmin)
+
 
 @admin.register(Account)
 class AccountAdmin(SimpleHistoryAdmin):
