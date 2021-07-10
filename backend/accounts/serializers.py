@@ -1,7 +1,8 @@
-from .models import Account, JoinedRequest
+from .models import Account, JoinedRequest, Transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
+from django.db.models import F
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -18,7 +19,7 @@ class AccountSerializer(serializers.ModelSerializer):
             "conf_label",
             "integrity_label",
             "amount",
-            "user",
+            # "user",
             "username",
             "has_read_access",
             "has_write_access",
@@ -120,3 +121,51 @@ class JoinedRequestUpdateSerializer(serializers.ModelSerializer):
             "status",
         )
         read_only_fields = ["user", "requested_account"]
+
+
+class TransactionSerializer(serializers.ModelSerializer):
+
+    username = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Transaction
+        fields = (
+            "id",
+            "user",
+            "username",
+            "transaction_type",
+            "amount",
+            "from_account",
+            "to_account",
+        )
+
+    def validate(self, attrs):
+
+        instance = Transaction(**attrs)
+        instance.full_clean()
+
+        return super().validate(attrs)
+
+    def create(self, validated_data):
+
+        # user = validated_data.get("user")
+        transaction_type = validated_data.get("transaction_type")
+        from_account = validated_data.get("from_account")
+        to_account = validated_data.get("to_account")
+        amount = validated_data.get("amount")
+
+        if transaction_type == "deposit":
+            Account.objects.filter(id=to_account.id).update(
+                amount=F("amount") + amount
+            )
+
+        elif transaction_type == "withdraw":
+            Account.objects.filter(id=from_account.id).update(
+                amount=F("amount") - amount
+            )
+            Account.objects.filter(id=to_account.id).update(amount=F("amount") + amount)
+
+        return super().create(validated_data)
+
+    def get_username(self, obj):
+        return obj.user.username

@@ -53,8 +53,10 @@ class JoinedRequestAdmin(SimpleHistoryAdmin):
 @admin.register(Transaction)
 class TransactionAdmin(SimpleHistoryAdmin):
     list_display = (
+        "user",
         "from_account",
         "to_account",
+        "transaction_type",
         "amount",
         "created_at",
         "updated_at",

@@ -11,6 +11,7 @@ from .serializers import (
     JoinedRequestCreateSerializer,
     JoinedRequestSerializer,
     JoinedRequestUpdateSerializer,
+    TransactionSerializer,
 )
 from .permissions import Forbidden, HasReadAccess
 from .models import Account, JoinedRequest, Transaction
@@ -103,44 +104,44 @@ class JoinedRequestViewSet(EnhancedModelViewSet):
         serializer.save(user=self.request.user)
 
 
-# class TransactionViewSet(EnhancedModelViewSet):
-#     def get_queryset(self):
-#         return Transaction.objects.filter(requested_account__user=self.request.user)
+class TransactionViewSet(EnhancedModelViewSet):
+    def get_queryset(self):
+        return Transaction.objects.filter(user=self.request.user)
 
-#     # default serializer and permission classes
-#     serializer_class = JoinedRequestSerializer
-#     permission_classes = [
-#         permissions.IsAuthenticated,
-#     ]
+    # default serializer and permission classes
+    serializer_class = TransactionSerializer
+    permission_classes = [
+        permissions.IsAuthenticated,
+    ]
 
-#     ordering_fields = "__all__"
-#     ordering = ["id"]
+    ordering_fields = "__all__"
+    ordering = ["id"]
 
-#     # override per action
-#     action_serializers = {
-#         "list": JoinedRequestSerializer,
-#         "create": JoinedRequestCreateSerializer,
-#         # "retrieve": JoinedRequestSerializer,
-#         "update": JoinedRequestUpdateSerializer,
-#         "partial_update": JoinedRequestUpdateSerializer,
-#         # "destroy": Serializer6,
-#     }
+    # override per action
+    # action_serializers = {
+    #     "list": JoinedRequestSerializer,
+    #     "create": JoinedRequestCreateSerializer,
+    #     # "retrieve": JoinedRequestSerializer,
+    #     "update": JoinedRequestUpdateSerializer,
+    #     "partial_update": JoinedRequestUpdateSerializer,
+    #     # "destroy": Serializer6,
+    # }
 
-#     # # override per action
-#     action_permission_classes = {
-#         "list": [permissions.IsAuthenticated],
-#         "create": [permissions.IsAuthenticated],
-#         "retrieve": [
-#             permissions.IsAuthenticated,
-#         ],
-#         "update": [
-#             permissions.IsAuthenticated,
-#         ],
-#         "partial_update": [
-#             permissions.IsAuthenticated,
-#         ],
-#         "destroy": [Forbidden],
-#     }
+    # # override per action
+    # action_permission_classes = {
+    #     "list": [permissions.IsAuthenticated],
+    #     "create": [permissions.IsAuthenticated],
+    #     "retrieve": [
+    #         permissions.IsAuthenticated,
+    #     ],
+    #     "update": [
+    #         permissions.IsAuthenticated,
+    #     ],
+    #     "partial_update": [
+    #         permissions.IsAuthenticated,
+    #     ],
+    #     "destroy": [Forbidden],
+    # }
 
-#     def perform_create(self, serializer):
-#         serializer.save(user=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)

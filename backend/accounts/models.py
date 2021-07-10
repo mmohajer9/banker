@@ -5,6 +5,7 @@ from django.contrib.auth.models import (
 from django.utils.translation import ugettext_lazy as _
 from simple_history.models import HistoricalRecords
 from django.core.exceptions import ValidationError
+from django.core.validators import EMPTY_VALUES, MinValueValidator
 
 import uuid
 
@@ -111,6 +112,20 @@ class JoinedRequest(models.Model):
         (1, "Untrusted"),
     )
 
+    CONFIDENTIALITY_CHOICES_DICTIONARY = {
+        4: "Top Secret",
+        3: "Secret",
+        2: "Confidential",
+        1: "Unclassified",
+    }
+
+    INTEGRITY_CHOICES_DICTIONARY = {
+        4: "Very Trusted",
+        3: "Trusted",
+        2: "Slightly Trusted",
+        1: "Untrusted",
+    }
+
     STATUS_CHOICES = [
         ("pending", "pending"),
         ("accepted", "accepted"),
@@ -165,12 +180,14 @@ class JoinedRequest(models.Model):
         return super().clean()
 
     def requested_account_conf_label(self):
-        return self.CONFIDENTIALITY_CHOICES[self.requested_account.conf_label - 1][1]
+        return self.CONFIDENTIALITY_CHOICES_DICTIONARY[
+            self.requested_account.conf_label
+        ]
 
     requested_account_conf_label.short_description = _("Account Confidentiality Label")
 
     def requested_account_integrity_label(self):
-        return self.INTEGRITY_CHOICES[self.requested_account.integrity_label - 1][1]
+        return self.INTEGRITY_CHOICES_DICTIONARY[self.requested_account.integrity_label]
 
     requested_account_integrity_label.short_description = _("Account Integrity Label")
 
@@ -213,6 +230,19 @@ class JoinedRequest(models.Model):
 
 class Transaction(models.Model):
 
+    TRANSACTION_TYPE_CHOICES = (
+        ("deposit", "Deposit"),
+        ("withdraw", "Withdraw"),
+    )
+
+    user = models.ForeignKey(
+        "User",
+        on_delete=models.CASCADE,
+        verbose_name=_("User"),
+        related_name="transactions",
+        null=True,
+    )
+
     from_account = models.ForeignKey(
         "Account",
         on_delete=models.CASCADE,
@@ -228,9 +258,18 @@ class Transaction(models.Model):
         verbose_name=_("To"),
         related_name="transactions_as_reciever",
     )
-
+    transaction_type = models.CharField(
+        max_length=100,
+        choices=TRANSACTION_TYPE_CHOICES,
+        verbose_name=_("Transaction Type"),
+        default="deposit",
+    )
     amount = models.DecimalField(
-        _("Amount"), max_digits=10, decimal_places=2, default=0
+        _("Amount"),
+        max_digits=10,
+        decimal_places=2,
+        default=0,
+        validators=[MinValueValidator(1)],
     )
 
     created_at = models.DateTimeField(
@@ -241,7 +280,73 @@ class Transaction(models.Model):
     )
 
     def __str__(self):
-        return f"{self.from_account} - {self.to_account} - {self.amount}"
+        return f"{self.from_account} > {self.to_account} : {self.amount}"
+
+    def clean(self):
+
+        if self.transaction_type == "deposit":
+            if self.from_account not in EMPTY_VALUES:
+                raise ValidationError(
+                    {
+                        "from_account": _(
+                            "In deposit, you can not specify source account"
+                        )
+                    }
+                )
+
+        elif self.transaction_type == "withdraw":
+            if self.from_account in EMPTY_VALUES:
+                raise ValidationError(
+                    {
+                        "from_account": _(
+                            "In withdraw, you should specify source account"
+                        )
+                    }
+                )
+
+            if self.from_account == self.to_account:
+                raise ValidationError(
+                    {
+                        "from_account": _(
+                            "source account can not be the same as destination"
+                        ),
+                        "to_account": _(
+                            "source account can not be the same as destination"
+                        ),
+                    }
+                )
+
+            if self.from_account.amount < self.amount:
+                raise ValidationError(
+                    {"amount": _("Not enough balance in the source account")}
+                )
+
+            joined_request = JoinedRequest.objects.filter(
+                user=self.user,
+                requested_account=self.from_account,
+                status="accepted",
+            )
+
+            if joined_request.exists():
+                if not joined_request.first().has_write_access():
+                    raise ValidationError(
+                        {
+                            "user": _(
+                                "This user does not have access to the source account because of low access level"
+                            )
+                        }
+                    )
+            else:
+                if not self.from_account.user == self.user:
+                    raise ValidationError(
+                        {
+                            "user": _(
+                                "This user does not have access to the source account because of low access level"
+                            )
+                        }
+                    )
+
+        return super().clean()
 
     class Meta:
         # db_table = ''
