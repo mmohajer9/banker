@@ -241,6 +241,7 @@ class Transaction(models.Model):
         verbose_name=_("User"),
         related_name="transactions",
         null=True,
+        blank=True,
     )
 
     from_account = models.ForeignKey(
