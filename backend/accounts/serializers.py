@@ -5,59 +5,6 @@ from django.utils.translation import ugettext_lazy as _
 from django.db.models import F
 
 
-class AccountSerializer(serializers.ModelSerializer):
-
-    username = serializers.SerializerMethodField()
-    has_read_access = serializers.SerializerMethodField()
-    has_write_access = serializers.SerializerMethodField()
-
-    class Meta:
-        model = Account
-        fields = (
-            "id",
-            "account_type",
-            "conf_label",
-            "integrity_label",
-            "amount",
-            # "user",
-            "username",
-            "has_read_access",
-            "has_write_access",
-            "created_at",
-            "updated_at",
-        )
-
-    def get_username(self, obj):
-        return obj.user.username
-
-    def get_has_read_access(self, obj):
-        user = self.context["request"].user
-
-        try:
-            jr = JoinedRequest.objects.get(
-                user=user,
-                requested_account=obj,
-                status="accepted",
-            )
-
-            return jr.has_read_access()
-        except:
-            return True
-
-    def get_has_write_access(self, obj):
-        user = self.context["request"].user
-        try:
-            jr = JoinedRequest.objects.get(
-                user=user,
-                requested_account=obj,
-                status="accepted",
-            )
-
-            return jr.has_write_access()
-        except:
-            return True
-
-
 class JoinedRequestSerializer(serializers.ModelSerializer):
 
     username = serializers.SerializerMethodField()
@@ -155,9 +102,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         amount = validated_data.get("amount")
 
         if transaction_type == "deposit":
-            Account.objects.filter(id=to_account.id).update(
-                amount=F("amount") + amount
-            )
+            Account.objects.filter(id=to_account.id).update(amount=F("amount") + amount)
 
         elif transaction_type == "withdraw":
             Account.objects.filter(id=from_account.id).update(
@@ -169,3 +114,60 @@ class TransactionSerializer(serializers.ModelSerializer):
 
     def get_username(self, obj):
         return obj.user.username
+
+
+class AccountSerializer(serializers.ModelSerializer):
+
+    username = serializers.SerializerMethodField()
+    has_read_access = serializers.SerializerMethodField()
+    has_write_access = serializers.SerializerMethodField()
+    transactions_as_sender = TransactionSerializer(many=True, read_only=True)
+    transactions_as_reciever = TransactionSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Account
+        fields = (
+            "id",
+            "account_type",
+            "conf_label",
+            "integrity_label",
+            "amount",
+            # "user",
+            "username",
+            "has_read_access",
+            "has_write_access",
+            "created_at",
+            "updated_at",
+            "transactions_as_sender",
+            "transactions_as_reciever",
+        )
+
+    def get_username(self, obj):
+        return obj.user.username
+
+    def get_has_read_access(self, obj):
+        user = self.context["request"].user
+
+        try:
+            jr = JoinedRequest.objects.get(
+                user=user,
+                requested_account=obj,
+                status="accepted",
+            )
+
+            return jr.has_read_access()
+        except:
+            return True
+
+    def get_has_write_access(self, obj):
+        user = self.context["request"].user
+        try:
+            jr = JoinedRequest.objects.get(
+                user=user,
+                requested_account=obj,
+                status="accepted",
+            )
+
+            return jr.has_write_access()
+        except:
+            return True
