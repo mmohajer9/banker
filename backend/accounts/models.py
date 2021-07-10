@@ -160,19 +160,17 @@ class JoinedRequest(models.Model):
         return str(self.requested_account.user)
 
     def clean(self):
-
         if self.user == self.requested_account.user:
             raise ValidationError(_("You can not request to yourself"))
-
         return super().clean()
 
     def requested_account_conf_label(self):
-        return self.CONFIDENTIALITY_CHOICES[self.requested_account.conf_label][1]
+        return self.CONFIDENTIALITY_CHOICES[self.requested_account.conf_label - 1][1]
 
     requested_account_conf_label.short_description = _("Account Confidentiality Label")
 
     def requested_account_integrity_label(self):
-        return self.INTEGRITY_CHOICES[self.requested_account.integrity_label][1]
+        return self.INTEGRITY_CHOICES[self.requested_account.integrity_label - 1][1]
 
     requested_account_integrity_label.short_description = _("Account Integrity Label")
 

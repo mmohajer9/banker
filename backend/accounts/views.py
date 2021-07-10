@@ -6,9 +6,14 @@ from django.db.models import Q
 # from django.shortcuts import get_object_or_404
 
 from .generics import EnhancedModelViewSet
-from .serializers import AccountSerializer
+from .serializers import (
+    AccountSerializer,
+    JoinedRequestCreateSerializer,
+    JoinedRequestSerializer,
+    JoinedRequestUpdateSerializer,
+)
 from .permissions import Forbidden, HasReadAccess
-from .models import Account, JoinedRequest
+from .models import Account, JoinedRequest, Transaction
 
 
 # Create your views here.
@@ -53,3 +58,89 @@ class AccountViewSet(EnhancedModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class JoinedRequestViewSet(EnhancedModelViewSet):
+    def get_queryset(self):
+        return JoinedRequest.objects.filter(requested_account__user=self.request.user)
+
+    # default serializer and permission classes
+    serializer_class = JoinedRequestSerializer
+    permission_classes = [
+        permissions.IsAuthenticated,
+    ]
+
+    ordering_fields = "__all__"
+    ordering = ["id"]
+
+    # override per action
+    action_serializers = {
+        "list": JoinedRequestSerializer,
+        "create": JoinedRequestCreateSerializer,
+        # "retrieve": JoinedRequestSerializer,
+        "update": JoinedRequestUpdateSerializer,
+        "partial_update": JoinedRequestUpdateSerializer,
+        # "destroy": Serializer6,
+    }
+
+    # # override per action
+    action_permission_classes = {
+        "list": [permissions.IsAuthenticated],
+        "create": [permissions.IsAuthenticated],
+        "retrieve": [
+            permissions.IsAuthenticated,
+        ],
+        "update": [
+            permissions.IsAuthenticated,
+        ],
+        "partial_update": [
+            permissions.IsAuthenticated,
+        ],
+        "destroy": [Forbidden],
+    }
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+# class TransactionViewSet(EnhancedModelViewSet):
+#     def get_queryset(self):
+#         return Transaction.objects.filter(requested_account__user=self.request.user)
+
+#     # default serializer and permission classes
+#     serializer_class = JoinedRequestSerializer
+#     permission_classes = [
+#         permissions.IsAuthenticated,
+#     ]
+
+#     ordering_fields = "__all__"
+#     ordering = ["id"]
+
+#     # override per action
+#     action_serializers = {
+#         "list": JoinedRequestSerializer,
+#         "create": JoinedRequestCreateSerializer,
+#         # "retrieve": JoinedRequestSerializer,
+#         "update": JoinedRequestUpdateSerializer,
+#         "partial_update": JoinedRequestUpdateSerializer,
+#         # "destroy": Serializer6,
+#     }
+
+#     # # override per action
+#     action_permission_classes = {
+#         "list": [permissions.IsAuthenticated],
+#         "create": [permissions.IsAuthenticated],
+#         "retrieve": [
+#             permissions.IsAuthenticated,
+#         ],
+#         "update": [
+#             permissions.IsAuthenticated,
+#         ],
+#         "partial_update": [
+#             permissions.IsAuthenticated,
+#         ],
+#         "destroy": [Forbidden],
+#     }
+
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)

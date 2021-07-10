@@ -1,5 +1,7 @@
 from .models import Account, JoinedRequest
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+from django.utils.translation import ugettext_lazy as _
 
 
 class AccountSerializer(serializers.ModelSerializer):
@@ -55,7 +57,66 @@ class AccountSerializer(serializers.ModelSerializer):
             return True
 
 
-class AccountUpdateSerializer(serializers.ModelSerializer):
+class JoinedRequestSerializer(serializers.ModelSerializer):
+
+    username = serializers.SerializerMethodField()
+    requested_account_owner = serializers.SerializerMethodField()
+
     class Meta:
-        model = Account
-        fields = ("amount",)
+        model = JoinedRequest
+        fields = (
+            "id",
+            "user",
+            "username",
+            "requested_account",
+            "requested_account_owner",
+            "conf_label",
+            "integrity_label",
+            "status",
+            "created_at",
+            "updated_at",
+            "has_read_access",
+            "has_write_access",
+        )
+
+    def get_username(self, obj):
+        return obj.user.username
+
+    def get_requested_account_owner(self, obj):
+        return obj.requested_account.user.username
+
+
+class JoinedRequestCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JoinedRequest
+        fields = ("requested_account",)
+
+    def create(self, validated_data):
+
+        user = validated_data.get("user")
+        requested_account = validated_data.get("requested_account")
+
+        if user == requested_account.user:
+            raise ValidationError({"error": _("You can not request to yourself")})
+
+        if JoinedRequest.objects.filter(
+            user=user, requested_account=requested_account
+        ).exists():
+            raise ValidationError(
+                {"error": _("You can not request to this account twice")}
+            )
+
+        return super().create(validated_data)
+
+
+class JoinedRequestUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JoinedRequest
+        fields = (
+            "user",
+            "requested_account",
+            "conf_label",
+            "integrity_label",
+            "status",
+        )
+        read_only_fields = ["user", "requested_account"]
