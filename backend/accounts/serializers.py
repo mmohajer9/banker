@@ -131,7 +131,7 @@ class TransactionSerializer(serializers.ModelSerializer):
         model = Transaction
         fields = (
             "id",
-            "user",
+            # "user",
             "username",
             "transaction_type",
             "amount",

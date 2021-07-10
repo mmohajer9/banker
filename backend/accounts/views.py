@@ -128,20 +128,14 @@ class TransactionViewSet(EnhancedModelViewSet):
     # }
 
     # # override per action
-    # action_permission_classes = {
-    #     "list": [permissions.IsAuthenticated],
-    #     "create": [permissions.IsAuthenticated],
-    #     "retrieve": [
-    #         permissions.IsAuthenticated,
-    #     ],
-    #     "update": [
-    #         permissions.IsAuthenticated,
-    #     ],
-    #     "partial_update": [
-    #         permissions.IsAuthenticated,
-    #     ],
-    #     "destroy": [Forbidden],
-    # }
+    action_permission_classes = {
+        "list": [permissions.IsAuthenticated],
+        "create": [permissions.IsAuthenticated],
+        "retrieve": [permissions.IsAuthenticated],
+        "update": [Forbidden],
+        "partial_update": [Forbidden],
+        "destroy": [Forbidden],
+    }
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
