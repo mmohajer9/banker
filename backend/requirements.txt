@@ -63,6 +63,7 @@ prompt-toolkit==3.0.19
 psycopg2==2.9.1
 ptyprocess==0.7.0
 pycparser==2.20
+pycrypto==2.6.1
 Pygments==2.9.0
 PyJWT==2.1.0
 pyparsing==2.4.7
