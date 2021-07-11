@@ -25,10 +25,8 @@ class BaseMiddleware:
 
     def process_exception(self, request, exception):
         # This code is executed if an exception is raised (esp in view)
-        pass
+        print("EXCEPTION IS OCCURED")
 
     def process_template_response(self, request, response):
         # This code is executed if the response contains a render() method
         return response
-
-

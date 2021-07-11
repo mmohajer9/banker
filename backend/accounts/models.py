@@ -338,7 +338,9 @@ class Transaction(models.Model):
                         }
                     )
             else:
-                if not self.from_account.user == self.user:
+                if not self.user:
+                    pass
+                elif not self.from_account.user == self.user:
                     raise ValidationError(
                         {
                             "user": _(

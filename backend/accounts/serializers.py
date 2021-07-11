@@ -94,7 +94,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data):
-
+        
+        print(validated_data)
         # user = validated_data.get("user")
         transaction_type = validated_data.get("transaction_type")
         from_account = validated_data.get("from_account")
