@@ -333,19 +333,19 @@ class Transaction(models.Model):
 
 class AuditLog(models.Model):
 
-    action = models.CharField(_("Action"), max_length=50, blank=True, null=True)
-    path = models.CharField(_("Path"), max_length=50, blank=True, null=True)
-    method = models.CharField(_("Method"), max_length=50, blank=True, null=True)
-    user = models.CharField(_("User"), max_length=50, blank=True, null=True)
+    action = models.CharField(_("Action"), max_length=500, blank=True, null=True)
+    path = models.CharField(_("Path"), max_length=500, blank=True, null=True)
+    method = models.CharField(_("Method"), max_length=500, blank=True, null=True)
+    user = models.CharField(_("User"), max_length=500, blank=True, null=True)
     remote_address = models.CharField(
-        _("Remote Address"), max_length=50, blank=True, null=True
+        _("Remote Address"), max_length=500, blank=True, null=True
     )
     content_type = models.CharField(
-        _("Content-Type"), max_length=50, blank=True, null=True
+        _("Content-Type"), max_length=500, blank=True, null=True
     )
-    log_name = models.CharField(_("Log Name"), max_length=50, blank=True, null=True)
-    browser = models.CharField(_("Browser"), max_length=50, blank=True, null=True)
-    user_agent = models.CharField(_("User Agent"), max_length=50, blank=True, null=True)
+    log_name = models.CharField(_("Log Name"), max_length=500, blank=True, null=True)
+    browser = models.CharField(_("Browser"), max_length=500, blank=True, null=True)
+    user_agent = models.CharField(_("User Agent"), max_length=500, blank=True, null=True)
 
     created_at = models.DateTimeField(
         _("Created at"), auto_now_add=True, blank=True, null=True
