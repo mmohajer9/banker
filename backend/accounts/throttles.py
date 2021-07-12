@@ -1,3 +1,4 @@
+from .models import AuditLog
 from rest_framework import throttling
 
 
@@ -5,18 +6,18 @@ class AuditedScopedThrottle(throttling.ScopedRateThrottle):
     def throttle_failure(self):
         request = self.request._request
 
-        # print(request.path)
-        # print(request.method)
-        # print(request.user)
-        # print(request.auth)
-        # print(request.META.get('REQUEST_METHOD'))
-        # print(request.META.get('REMOTE_ADDR'))
-        # print(request.META.get('CONTENT_TYPE'))
-        # print(request.META.get('LOGNAME'))
-        # print(request.META.get('BROWSER'))
-        # print(request.META.get('USER'))
-        # print(request.META.get('HTTP_USER_AGENT'))
-        
+        AuditLog.objects.create(
+            action="Wrong Password Throttle",
+            path=request.path,
+            method=request.method,
+            user=request.user,
+            remote_address=request.META.get("REMOTE_ADDR"),
+            content_type=request.META.get("CONTENT_TYPE"),
+            log_name=request.META.get("LOGNAME"),
+            browser=request.META.get("BROWSER"),
+            user_agent=request.META.get("HTTP_USER_AGENT"),
+        )
+
         return super().throttle_failure()
 
     def allow_request(self, request, view):

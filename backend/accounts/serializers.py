@@ -1,4 +1,4 @@
-from .models import Account, JoinedRequest, Transaction
+from .models import Account, AuditLog, JoinedRequest, Transaction
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.utils.translation import ugettext_lazy as _
@@ -94,9 +94,8 @@ class TransactionSerializer(serializers.ModelSerializer):
         return super().validate(attrs)
 
     def create(self, validated_data):
-        
-        print(validated_data)
-        # user = validated_data.get("user")
+        request = self.context.get("request", None)
+        user = validated_data.get("user")
         transaction_type = validated_data.get("transaction_type")
         from_account = validated_data.get("from_account")
         to_account = validated_data.get("to_account")
@@ -106,6 +105,53 @@ class TransactionSerializer(serializers.ModelSerializer):
             Account.objects.filter(id=to_account.id).update(amount=F("amount") + amount)
 
         elif transaction_type == "withdraw":
+
+            joined_request = JoinedRequest.objects.filter(
+                user=user,
+                requested_account=from_account,
+                status="accepted",
+            )
+            if joined_request.exists():
+                if not joined_request.first().has_write_access():
+                    AuditLog.objects.create(
+                        action="Access Control : No Write Access",
+                        path=request.path,
+                        method=request.method,
+                        user=request.user,
+                        remote_address=request.META.get("REMOTE_ADDR"),
+                        content_type=request.META.get("CONTENT_TYPE"),
+                        log_name=request.META.get("LOGNAME"),
+                        browser=request.META.get("BROWSER"),
+                        user_agent=request.META.get("HTTP_USER_AGENT"),
+                    )
+                    raise ValidationError(
+                        {
+                            "user": _(
+                                "This user does not have access to the source account because of low access level"
+                            )
+                        }
+                    )
+            else:
+                if not from_account.user == user:
+                    AuditLog.objects.create(
+                        action="Access Control : No Write Access",
+                        path=request.path,
+                        method=request.method,
+                        user=request.user,
+                        remote_address=request.META.get("REMOTE_ADDR"),
+                        content_type=request.META.get("CONTENT_TYPE"),
+                        log_name=request.META.get("LOGNAME"),
+                        browser=request.META.get("BROWSER"),
+                        user_agent=request.META.get("HTTP_USER_AGENT"),
+                    )
+                    raise ValidationError(
+                        {
+                            "user": _(
+                                "This user does not have access to the source account because of low access level"
+                            )
+                        }
+                    )
+
             Account.objects.filter(id=from_account.id).update(
                 amount=F("amount") - amount
             )

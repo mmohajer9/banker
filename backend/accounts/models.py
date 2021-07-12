@@ -322,33 +322,6 @@ class Transaction(models.Model):
                     {"amount": _("Not enough balance in the source account")}
                 )
 
-            joined_request = JoinedRequest.objects.filter(
-                user=self.user,
-                requested_account=self.from_account,
-                status="accepted",
-            )
-
-            if joined_request.exists():
-                if not joined_request.first().has_write_access():
-                    raise ValidationError(
-                        {
-                            "user": _(
-                                "This user does not have access to the source account because of low access level"
-                            )
-                        }
-                    )
-            else:
-                if not self.user:
-                    pass
-                elif not self.from_account.user == self.user:
-                    raise ValidationError(
-                        {
-                            "user": _(
-                                "This user does not have access to the source account because of low access level"
-                            )
-                        }
-                    )
-
         return super().clean()
 
     class Meta:
@@ -356,3 +329,36 @@ class Transaction(models.Model):
         # managed = True
         verbose_name = "Transaction"
         verbose_name_plural = "Transactions"
+
+
+class AuditLog(models.Model):
+
+    action = models.CharField(_("Action"), max_length=50, blank=True, null=True)
+    path = models.CharField(_("Path"), max_length=50, blank=True, null=True)
+    method = models.CharField(_("Method"), max_length=50, blank=True, null=True)
+    user = models.CharField(_("User"), max_length=50, blank=True, null=True)
+    remote_address = models.CharField(
+        _("Remote Address"), max_length=50, blank=True, null=True
+    )
+    content_type = models.CharField(
+        _("Content-Type"), max_length=50, blank=True, null=True
+    )
+    log_name = models.CharField(_("Log Name"), max_length=50, blank=True, null=True)
+    browser = models.CharField(_("Browser"), max_length=50, blank=True, null=True)
+    user_agent = models.CharField(_("User Agent"), max_length=50, blank=True, null=True)
+
+    created_at = models.DateTimeField(
+        _("Created at"), auto_now_add=True, blank=True, null=True
+    )
+    updated_at = models.DateTimeField(
+        _("Updated at"), auto_now=True, blank=True, null=True
+    )
+
+    def __str__(self):
+        return self.action
+
+    class Meta:
+        # db_table = ''
+        # managed = True
+        verbose_name = "AuditLog"
+        verbose_name_plural = "AuditLogs"

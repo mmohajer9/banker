@@ -1,4 +1,4 @@
-from .models import JoinedRequest
+from .models import AuditLog, JoinedRequest
 from rest_framework.permissions import BasePermission, SAFE_METHODS
 
 # from django.contrib.auth.models import AnonymousUser
@@ -40,7 +40,23 @@ class HasReadAccess(BasePermission):
                 status="accepted",
             )
 
-            return jr.has_read_access()
+            if jr.has_read_access():
+                return True
+            else:
+
+                AuditLog.objects.create(
+                    action="Access Control : No Read Access",
+                    path=request.path,
+                    method=request.method,
+                    user=request.user,
+                    remote_address=request.META.get("REMOTE_ADDR"),
+                    content_type=request.META.get("CONTENT_TYPE"),
+                    log_name=request.META.get("LOGNAME"),
+                    browser=request.META.get("BROWSER"),
+                    user_agent=request.META.get("HTTP_USER_AGENT"),
+                )
+
+                return False
 
         except:
             return True

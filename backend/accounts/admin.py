@@ -3,7 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 from simple_history.admin import SimpleHistoryAdmin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Account, User, Transaction, JoinedRequest
+from .models import Account, AuditLog, User, Transaction, JoinedRequest
 
 # Register your models here.
 
@@ -53,11 +53,33 @@ class JoinedRequestAdmin(SimpleHistoryAdmin):
 @admin.register(Transaction)
 class TransactionAdmin(SimpleHistoryAdmin):
     list_display = (
+        "id",
         "user",
         "from_account",
         "to_account",
         "transaction_type",
         "amount",
+        "created_at",
+        "updated_at",
+    )
+    # list_filter = ["user", "title", "business_phone"]
+    # search_fields = ('user__username','postal_code__startswith')
+    # prepopulated_fields = {'slug': ('title',)}
+
+
+@admin.register(AuditLog)
+class AuditLogAdmin(SimpleHistoryAdmin):
+    list_display = (
+        "id",
+        "action",
+        "path",
+        "method",
+        "user",
+        "remote_address",
+        "content_type",
+        "log_name",
+        "browser",
+        "user_agent",
         "created_at",
         "updated_at",
     )
