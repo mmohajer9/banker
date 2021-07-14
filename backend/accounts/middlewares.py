@@ -30,3 +30,26 @@ class BaseMiddleware:
     def process_template_response(self, request, response):
         # This code is executed if the response contains a render() method
         return response
+
+
+class AESEncryptionMiddleWare(BaseMiddleware):
+    def __call__(self, request):
+        # Code that is executed in each request before the view is called
+
+        from Crypto.Cipher import AES
+        from Crypto import Random
+        from django.conf import settings
+
+        enc = request.body
+
+        key = str.encode(settings.SECRET_KEY)
+        iv = enc[: AES.block_size]
+        cipher = AES.new(key, AES.MODE_CBC, iv)
+        plain_data = cipher.decrypt(enc[AES.block_size :])
+
+        request.body = plain_data
+
+        response = self.get_response(request)
+
+        # Code that is executed in each request after the view is called
+        return response
