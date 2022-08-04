@@ -23,6 +23,17 @@ banker is a banking system with security mechanisms implemented
 1. `python manage.py migrate`
 2. `python manage.py runserver`
 
+
+### Screenshots
+
+#### 1st
+
+<img src="1.jpg" width="256"/><img src="2.jpg" width="256"/><img src="3.jpg" width="256"/>
+
+#### 2nd
+
+<img src="4.jpg" width="256"/><img src="5.jpg" width="256"/>
+
 ## Credits
 
 Thank those who helped make this possible.
